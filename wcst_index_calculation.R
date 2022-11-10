@@ -146,7 +146,7 @@ cal_perseverated_to <- function(data){
         if(row_1$category_completed==0){ # the first category
           if(row_1$correct==FALSE){ # error trial
             if(row_1$wcst_ambiguous==0){ # unambiguous trial
-              wcst_perseverated_to <- row_1$wcst_actual_obey
+              wcst_perseverated_to <- row_1$wcst_obey_dim
               wcst_perseverated_to_tag <- "first category error"
             }
           }
@@ -177,7 +177,6 @@ cal_perseverated_to <- function(data){
         }
       }
     }
-    
     data$wcst_perseverated_to[i] <- wcst_perseverated_to
     data$wcst_perseverated_to_tag[i] <- wcst_perseverated_to_tag
   }
@@ -313,7 +312,6 @@ trial_index_calc <- function(data){
     calc_PR() %>% 
     calc_conceptual_level_response() %>%
     calc_failure_to_maintain_set()
-  
 }
 
 
@@ -399,33 +397,33 @@ calc_category_rate <- function(data){
 calc_indices <- function(data){
   
   return(data.frame(subid=data$subid[1],
-                    Number_Correct=calc_correct_n(data),
-                    Number_pr = calc_pr_n(data),
-                    Number_pr_e = calc_pr_e_n(data),
-                    Number_npr_e = calc_npr_e_n(data),
-                    Number_Category=calc_category_n(data),
-                    Number_ConceptualLevelResponse=calc_conceptual_level_response_n(data),
-                    Number_FailureToMaintainSet=calc_failure_to_maintain_set_response_n(data),
+                    TC=calc_correct_n(data),
+                    PR = calc_pr_n(data),
+                    PE = calc_pr_e_n(data),
+                    NPE = calc_npr_e_n(data),
+                    CLR=calc_conceptual_level_response_n(data),
+                    CAT=calc_category_n(data),
+                    FMS=calc_failure_to_maintain_set_response_n(data),
                     
-                    Percent_Correct=calc_correct_rate(data),
-                    Percent_pr = calc_pr_rate(data),
-                    Percent_pr_e = calc_pr_e_rate(data),
-                    Percent_npr_e = calc_npr_e_rate(data),
-                    Percent_Category=calc_category_rate(data),
-                    Percent_ConceptualLevelResponse=calc_conceptual_level_response_rate(data),
-                    Percent_FailureToMaintainSet=calc_failure_to_maintain_set_response_rate(data)
+                    p_TC=calc_correct_rate(data),
+                    p_PR = calc_pr_rate(data),
+                    p_PE = calc_pr_e_rate(data),
+                    p_NPE = calc_npr_e_rate(data),
+                    p_CLR=calc_conceptual_level_response_rate(data),
+                    p_CAT=calc_category_rate(data),
+                    p_FMS=calc_failure_to_maintain_set_response_rate(data)
   ))
 }
 
 
 # the new wcst_short after adding the mediate indices:
-wcst_short <- wcst_short %>% merge(
+wcst_short <- 
   by(
     wcst_long,
     wcst_long$subid,
     calc_indices
   ) %>% (function(frames){data.table::rbindlist(frames,use.names=TRUE)})()
-)
+
 
 # save to file
 write.csv(wcst_short,file.path(path_persistance,'wcst_short.csv'),sep=",")
@@ -764,9 +762,10 @@ multi_cal_params <- list(
 )
 
 
-multi_calc_frame <- multi_summary(data=wcst_long,framed_params=multi_cal_params)
-
-# save to file, check to see what has been saved.
-write.csv(multi_calc_frame %>% round(4),file.path(path_persistance,file="multi_calc_frame.csv"))
+# # deannotate to enable the split-half calculation, you need to know that this may cost most of the CPU source and may cost much time to complete.
+# multi_calc_frame <- multi_summary(data=wcst_long,framed_params=multi_cal_params)
+# 
+# # save to file, check to see what has been saved.
+# write.csv(multi_calc_frame %>% round(4),file.path(path_persistance,file="multi_calc_frame.csv"))
 
 
