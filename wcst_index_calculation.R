@@ -26,34 +26,116 @@ if(!dir.exists(path_persistance)){
   dir.create(path_persistance)
 }
 
+# utils
+check_equal <- function(a,b){
+  check_equal_type(a,b)
+  if(!identical(a,b)){
+    print(a)
+    print(b)
+    stop("NOT EQUAL!")
+  }
+}
+check_equal_type <- function(a,b){
+  if(class(a)!=class(b)){
+    stop(paste("NOT SAME TYPE! a:", class(a), "b:", class(b)))
+  }
+}
 
-### ==================================================== STEP1: data preperation
+check_type <- function(a,type){
+  if(class(a)!=type){
+    print(class(a))
+    print(type)
+    stop("NOT SAME TYPE! ")
+  }
+}
+
+check_subset <- function(a,b,tip){
+  if(!all(a %in% b)){
+    stop(paste("NOT SUBSET",tip,a[which(!a %in% b)] %>% toString()))
+  }
+}
+
+
+check_true <- function(a,tip){
+  if(!a){
+    stop(paste("NOT TRUE, ", tip))
+  }
+}
+
+makesure_type <- function(data,indices,is_type,as_type){
+  if(eval(parse(text=paste("!is_type(data$",indices,")",sep="")))){
+    eval(parse(text=paste("data$",indices,"<-","as_type(data$",indices,")",sep="")))
+  }
+}
+
+### ==================================================== STEP1: data preperation and check
 
 ### We need a .csv file or a dataframe.
 ### The init columns of the frame should contain these:
 ### # 'subid':              subject's id
-### # 'number_of_rule':     the present correct dimension(1/2/3 namely color/shape/number) that should be obey
-### # 'correct_card':       the correct card(0/1/2/3 namely the top four fixed cards from left to right) that should be chosen if obey the present correct dimension
 ### # 'color_rule':         one of the four cards(0/1/2/3 ~) that would be chosen if obey the color dimension
 ### # 'shape_rule':         one of the four cards(0/1/2/3 ~) that would be chosen if obey the shape dimension
 ### # 'number_rule':        one of the four cards(0/1/2/3 ~) that would be chosen if obey the number dimension
 ### # 'button_pressed':     one of the four cards(0/1/2/3 ~) actually be chosen
 ### # 'category_completed': total categories completed(0/1/2/3/4/5/6-)
 
-# 
-wcst_long <- read.table("./test_wcst_long.csv",fileEncoding="GBK", sep=",", header=TRUE)
+
+
+
+filename <- "test_wcst_long.csv"
+wcst_long <- read.table(filename,fileEncoding="GBK", sep=",", header=TRUE)
 wcst_short <- wcst_long[,c("subid")] %>% unique()
+
+
+## check the columns needed
+all_columns_needed <- c('subid','color_rule','shape_rule','number_rule','button_pressed','category_completed')
+check_subset(all_columns_needed,colnames(wcst_long),tip="You probably missing some columns: ")
+## check the column's elements' format
+check_subset(wcst_long[,c('color_rule')] %>% unique(),c(0,1,2,3),tip="The colomn of 'color_rule' should contain only 0/1/2/3, but yours contain:")
+check_subset(wcst_long[,c('shape_rule')] %>% unique(),c(0,1,2,3),tip="The colomn of 'shape_rule' should contain only 0/1/2/3, but yours contain:")
+check_subset(wcst_long[,c('number_rule')] %>% unique(),c(0,1,2,3),tip="The colomn of 'number_rule' should contain only 0/1/2/3, but yours contain:")
+check_subset(wcst_long[,c('button_pressed')] %>% unique(),c(0,1,2,3),tip="The colomn of 'button_pressed' should contain only 0/1/2/3, but yours contain:")
+check_subset(wcst_long[,c('category_completed')] %>% unique(),c(0,1,2,3,4,5,6),tip="The colomn of 'button_pressed' classically should be 0~6, but yours contain:")
 
 
 
 ### ==================================================== STEP2: necessary mediate indices calculation
+
+### Add new columns
+### # 'number_of_rule': the present correct dimension(1/2/3 namely color/shape/number) that should be obey
+### # 'correct_card':   the correct card(0/1/2/3 namely the top four fixed cards from left to right) that should be chosen if obey the present correct dimension
+### # 'correct':        the response is correct or not (TRUE/FALSEE)
+### Columns depend on:  'color_rule', 'shape_rule', 'number_rule', 'category_completed'
+cal_rule_and_correct <- function(data){
+  
+  # the correct dimension for consecutive categories.(this default order comes from classical version of WCST and may be compatible for most variances)
+  rules_order <- c(1,2,3,1,2,3,1) 
+  
+  data <- data %>% mutate(
+    number_of_rule = rules_order[data$category_completed+1], 
+    correct_card = "",
+    correct = ""
+  )
+  for(i in c(1:nrow(data))){
+    tmp <- data[i,c("color_rule","shape_rule","number_rule")]
+    data$correct_card[i] <- tmp[,data$number_of_rule[i]]
+  }
+  
+  for(i in c(1:nrow(data))){
+    data$correct[i] <- if(data$correct_card[i]==data$button_pressed[i]) TRUE else FALSE
+  }
+
+  return(data)
+  
+}
+
 
 
 ### Add new columns
 ### # 'wcst_correct_dim': all the dimensions(1/2/3), if obey, that could lead to the same result as when obey the correct dimension.
 ### # 'wcst_obey_dim':    all the probably obeyed dimensions(1/2/3) that could lead to the actually chosen card.
 ### # 'wcst_ambiguous':   ambiguous if could not directly infer which dimension was obeyed according to the chosen card. (0/1 namely unambiguous/ambiguous)
-### Columns depend on:    'correct_card', 'shape_rule', 'number_rule', 'correct_card', 'button_pressed'
+### Columns depend on:    'color_rule', 'shape_rule', 'numbe8r_rule', 'correct_card', 'button_pressed'
 cal_obey_dim <- function(data){
   data <- data %>% mutate(
     wcst_correct_dim = "", 
@@ -306,7 +388,9 @@ calc_failure_to_maintain_set <- function(data){
 
 ### start calculating all the mediate indices here
 trial_index_calc <- function(data){
-  data %>% cal_obey_dim() %>% 
+  data %>% 
+    cal_rule_and_correct %>% 
+    cal_obey_dim() %>% 
     calc_category_weight() %>%
     cal_perseverated_to() %>%
     calc_PR() %>% 
@@ -323,6 +407,7 @@ wcst_long <- wcst_long %>% by(
 ) %>% (function(frames){data.table::rbindlist(frames,use.names=TRUE)})()
 
 
+write.csv(wcst_long,file.path(path_persistance,'wcst_long.csv'),sep=",")
 
 ### ==================================================== STEP3: indices calculation functions and descriptive statistics
 

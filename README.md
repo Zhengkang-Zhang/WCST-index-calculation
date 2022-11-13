@@ -16,23 +16,21 @@
 
 We need a .csv file or a dataframe like this:
 
-| subid | number_of_rule | correct_card | color_rule | shape_rule | number_rule | button_pressed | category_completed |
-| ----- | -------------- | ------------ | ---------- | ---------- | ----------- | -------------- | ------------------ |
-| 001   | 1              | 1            | 1          | 0          | 0           | 1              | 0                  |
-| 001   | 1              | 0            | 0          | 2          | 3           | 0              | 0                  |
-| 001   | 1              | 3            | 3          | 0          | 1           | 3              | 0                  |
-| 001   | 1              | 0            | 0          | 3          | 0           | 0              | 0                  |
-| 001   | 1              | 1            | 1          | 1          | 3           | 1              | 0                  |
-| 001   | 1              | 2            | 2          | 2          | 0           | 2              | 0                  |
-| 001   | 1              | 3            | 3          | 0          | 3           | 3              | 0                  |
-| 001   | 1              | 0            | 0          | 3          | 2           | 2              | 0                  |
-| 001   | 1              | 1            | 1          | 2          | 3           | 2              | 0                  |
+| subid | color_rule | shape_rule | number_rule | button_pressed | category_completed |
+| ----- | ---------- | ---------- | ----------- | -------------- | ------------------ |
+| 001   | 1          | 0          | 0           | 1              | 0                  |
+| 001   | 0          | 2          | 3           | 0              | 0                  |
+| 001   | 3          | 0          | 1           | 3              | 0                  |
+| 001   | 0          | 3          | 0           | 0              | 0                  |
+| 001   | 1          | 1          | 3           | 1              | 0                  |
+| 001   | 2          | 2          | 0           | 2              | 0                  |
+| 001   | 3          | 0          | 3           | 3              | 0                  |
+| 001   | 0          | 3          | 2           | 2              | 0                  |
+| 001   | 1          | 2          | 3           | 2              | 0                  |
 
 The input frame should contain these columns:
 
 * 'subid':              subject's id
-* 'number_of_rule':     the present correct dimension(1/2/3 namely color/shape/number) that should be obey
-* 'correct_card':       the correct card(0/1/2/3 namely the top four fixed cards from left to right) that should be chosen if obey the present correct dimension
 * 'color_rule':         one of the four cards(0/1/2/3 ~) that would be chosen if obey the color dimension
 * 'shape_rule':         one of the four cards(0/1/2/3 ~) that would be chosen if obey the shape dimension
 * 'number_rule':        one of the four cards(0/1/2/3 ~) that would be chosen if obey the number dimension
