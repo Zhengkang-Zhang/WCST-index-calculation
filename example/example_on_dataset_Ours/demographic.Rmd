@@ -1,0 +1,444 @@
+---
+title: "01-Demographic"
+output: html_notebook
+---
+
+## Aim
+
+Determine the final sample and make the demographic table.
+
+## ============ PART 1
+## Prepare Data
+
+```{r}
+rm(list=ls())
+library(data.table)
+wcst <- fread("./wcst_short.csv")
+
+dat <- wcst[, .(sex, age_group,age, Number_Correct, Number_PerseverativeResponse, Number_PerseverativeError, Number_NonPerseverativeError, Number_ConceptualLevelResponse, Number_Category, Number_FailureToMaintainSet)]
+
+setnames(dat, old = names(dat)[4:10], c('TC', 'PR', 'PE', 'NPE', 'CLR', 'CAT', 'FMS'))
+
+dat[, sex:=factor(sex, levels = c("female","male"), labels = c("Female", "Male"))]
+dat[, age_group:=factor(age_group, levels = c("young","old"), labels = c("Young", "Old"))]
+#setnames(dat, c("sex","age_group"), c("Gender","Age"))
+dat[, Group:=paste(age_group, sex, sep = " ")]
+dat[, `:=`(sex=NULL,age_group=NULL)]
+```
+## ============ PART 2
+## Table2
+## Make index summaries 
+## Means and Standard Deviations for Age and Core Task Indices in Old and Young Groups
+
+```{r}
+library(compareGroups)
+table2 <- descrTable(formula = Group ~ .,
+                     data = dat)
+```
+
+```{r}
+export2word(table2, "Table2.docx")
+```
+
+## ============ PART 3
+## Table3
+## Correlation Table
+
+```{r}
+library(apaTables)
+apa.cor.table(data = dat[,2:8],
+              filename = "Table3.doc",
+              table.number = 3)
+```
+## ============ PART 4
+## Table4
+## The script for split-half reliability estimates is in another .R file named "wcst_index_calculation.R"
+## ...
+
+
+## ============ PART 5
+## Figure3
+## Gender and Age effect
+
+```{r}
+dat1 <- wcst[, .(subid, sex, age_group,age, Number_Correct, Number_PerseverativeResponse, Number_PerseverativeError, Number_NonPerseverativeError, Number_ConceptualLevelResponse, Number_Category, Number_FailureToMaintainSet)]
+
+setnames(dat1, old = names(dat1)[5:11], c('TC', 'PR', 'PE', 'NPE', 'CLR', 'CAT', 'FMS'))
+
+dat1[, sex:=factor(sex, levels = c("female","male"), labels = c("Female", "Male"))]
+dat1[, age_group:=factor(age_group, levels = c("young","old"), labels = c("Young", "Old"))]
+dat1[, subid:=factor(subid)]
+```
+
+### TC
+
+```{r}
+library(ez)
+anova.TC <- ezANOVA(data = dat1,
+                    dv = TC,
+                    wid = subid,
+                    between = .(sex, age_group),
+                    type = 3)
+anova.TC
+apa.ezANOVA.table(anova.TC, table.title = "Anova on Total Correct", filename = "anova_TC.doc")
+```
+
+```{r}
+anova.PR <- ezANOVA(data = dat1,
+                    dv = PR,
+                    wid = subid,
+                    between = .(sex, age_group),
+                    type = 3)
+anova.PR
+apa.ezANOVA.table(anova.PR, table.title = "Anova on Perseverative Response", filename = "anova_PR.doc")
+```
+
+```{r}
+anova.PE <- ezANOVA(data = dat1,
+                    dv = PE,
+                    wid = subid,
+                    between = .(sex, age_group),
+                    type = 3)
+anova.PE
+apa.ezANOVA.table(anova.PE, table.title = "Anova on Perseverative Error", filename = "anova_PE.doc")
+```
+
+```{r}
+anova.NPE <- ezANOVA(data = dat1,
+                    dv = NPE,
+                    wid = subid,
+                    between = .(sex, age_group),
+                    type = 3)
+anova.NPE
+apa.ezANOVA.table(anova.NPE, table.title = "Anova on Non-Perseverative Error", filename = "anova_NPE.doc")
+```
+
+```{r}
+anova.CLR <- ezANOVA(data = dat1,
+                    dv = CLR,
+                    wid = subid,
+                    between = .(sex, age_group),
+                    type = 3)
+anova.CLR
+apa.ezANOVA.table(anova.CLR, table.title = "Anova on CLR", filename = "anova_CLR.doc")
+```
+
+```{r}
+anova.CAT <- ezANOVA(data = dat1,
+                    dv = CAT,
+                    wid = subid,
+                    between = .(sex, age_group),
+                    type = 3)
+anova.CAT
+apa.ezANOVA.table(anova.CAT, table.title = "Anova on CAT", filename = "anova_CAT.doc")
+```
+
+```{r}
+anova.FMS <- ezANOVA(data = dat1,
+                    dv = FMS,
+                    wid = subid,
+                    between = .(sex, age_group),
+                    type = 3)
+anova.FMS
+apa.ezANOVA.table(anova.FMS, table.title = "Anova on FMS", filename = "anova_FMS.doc")
+```
+
+### Using Linear Regression
+
+```{r}
+lm.TC <- lm(TC ~ sex*age_group, data = dat1)
+summary(lm.TC)
+```
+
+## ============ PART 6
+## Figure1
+## Plot Age Group difference
+
+```{r}
+TC_diff <- dabest(.data = dat1,
+                   x = age_group, 
+                   y = TC,
+                  idx = c("Young", "Old") ,
+                   paired = FALSE) %>%
+            cohens_d()
+PR_diff <- dabest(.data = dat1,
+                   x = age_group, 
+                   y = PR,
+                   idx = c("Young", "Old") ,
+                   paired = FALSE) %>%
+            cohens_d()
+PE_diff <- dabest(.data = dat1,
+                   x = age_group, 
+                   y = PE,
+                   idx = c("Young", "Old") ,
+                   paired = FALSE) %>%
+            cohens_d()
+NPE_diff <- dabest(.data = dat1,
+                   x = age_group, 
+                   y = NPE,
+                   idx = c("Young", "Old") ,
+                   paired = FALSE) %>%
+            cohens_d()
+CLR_diff <- dabest(.data = dat1,
+                   x = age_group, 
+                   y = CLR,
+                   idx = c("Young", "Old") ,
+                   paired = FALSE) %>%
+            cohens_d()
+CAT_diff <- dabest(.data = dat1,
+                   x = age_group, 
+                   y = CAT,
+                   idx = c("Young", "Old") ,
+                   paired = FALSE) %>%
+            cohens_d()
+FMS_diff <- dabest(.data = dat1,
+                   x = age_group, 
+                   y = FMS,
+                   idx = c("Young", "Old") ,
+                   paired = FALSE) %>%
+            cohens_d()
+```
+
+```{r}
+fig_TC <- plot(TC_diff, effsize.ylabel = "Cohen's d")
+fig_PR <- plot(PR_diff, effsize.ylabel = "Cohen's d")
+fig_PE <- plot(PE_diff, effsize.ylabel = "Cohen's d")
+fig_NPE <- plot(NPE_diff, effsize.ylabel = "Cohen's d")
+fig_CLR <- plot(CLR_diff, effsize.ylabel = "Cohen's d")
+fig_CAT <- plot(CAT_diff, effsize.ylabel = "Cohen's d")
+fig_FMS <- plot(FMS_diff, effsize.ylabel = "Cohen's d")
+```
+
+
+```{r}
+library(cowplot)
+```
+
+```{r}
+
+fig_all <- plot_grid(fig_TC, fig_PR, fig_PE, fig_NPE, fig_CLR, fig_CAT, fig_FMS,
+                     labels = "AUTO",
+                     ncol = 3)
+
+save_plot("age_difference.tiff", fig_all)
+```
+
+
+## Age continuous
+
+```{r}
+lm.old.TC <- lm(TC ~ sex+age, data = dat1[dat1$age_group == "Old"])
+lm.old.PR <- lm(PR ~ sex+age, data = dat1[dat1$age_group == "Old"])
+lm.old.PE <- lm(PE ~ sex+age, data = dat1[dat1$age_group == "Old"])
+lm.old.NPE <- lm(NPE ~ sex+age, data = dat1[dat1$age_group == "Old"])
+lm.old.CLR <- lm(CLR ~ sex+age, data = dat1[dat1$age_group == "Old"])
+lm.old.CAT <- lm(CAT ~ sex+age, data = dat1[dat1$age_group == "Old"])
+lm.old.FMS <- lm(FMS ~ sex+age, data = dat1[dat1$age_group == "Old"])
+```
+
+
+```
+apa.reg.table(lm.old.TC, lm.old.PR, lm.old.PE, lm.old.NPE, lm.old.CLR, lm.old.CAT, lm.old.FMS,
+              filename = "Old_Age_reg.doc")
+```
+
+```{r}
+summary(lm.old.TC)
+```
+
+```{r}
+summary(lm.old.PR)
+```
+
+```{r}
+summary(lm.old.PE)
+```
+
+```{r}
+summary(lm.old.NPE)
+```
+
+```{r}
+summary(lm.old.CLR)
+```
+
+```{r}
+summary(lm.old.CAT)
+```
+
+
+```{r}
+summary(lm.old.FMS)
+```
+
+```{r}
+lm.young.TC <- lm(TC ~ sex+age, data = dat1[dat1$age_group == "Young"])
+lm.young.PR <- lm(PR ~ sex+age, data = dat1[dat1$age_group == "Young"])
+lm.young.PE <- lm(PE ~ sex+age, data = dat1[dat1$age_group == "Young"])
+lm.young.NPE <- lm(NPE ~ sex+age, data = dat1[dat1$age_group == "Young"])
+lm.young.CLR <- lm(CLR ~ sex+age, data = dat1[dat1$age_group == "Young"])
+lm.young.CAT <- lm(CAT ~ sex+age, data = dat1[dat1$age_group == "Young"])
+lm.young.FMS <- lm(FMS ~ sex+age, data = dat1[dat1$age_group == "Young"])
+```
+
+```{r}
+summary(lm.young.TC)
+```
+
+```{r}
+summary(lm.young.PR)
+```
+
+```{r}
+summary(lm.young.PE)
+```
+
+```{r}
+summary(lm.young.NPE)
+```
+
+
+```{r}
+summary(lm.young.CLR)
+```
+
+```{r}
+summary(lm.young.CAT)
+```
+
+```{r}
+summary(lm.young.FMS)
+```
+
+## Education 
+
+```{r}
+dat2 <- wcst[, .(sex, age_group,age, cultural, Number_Correct, Number_PerseverativeResponse, Number_PerseverativeError, Number_NonPerseverativeError, Number_ConceptualLevelResponse, Number_Category, Number_FailureToMaintainSet)]
+
+setnames(dat2, old = names(dat2)[5:11], c('TC', 'PR', 'PE', 'NPE', 'CLR', 'CAT', 'FMS'))
+setnames(dat2, old = "cultural", "edu")
+dat2[, sex:=factor(sex, levels = c("female","male"), labels = c("Female", "Male"))]
+dat2[, age_group:=factor(age_group, levels = c("young","old"), labels = c("Young", "Old"))]
+set(dat2, i = which(dat2$edu==0), j = which(names(dat2)=="edu"), 1)
+```
+
+
+```{r}
+lm.old.TC.edu <- lm(TC ~ edu + sex*age, data = dat2[dat2$age_group=="Old"])
+summary(lm.old.TC.edu)
+```
+
+```{r}
+lm.old.PE.edu <- lm(PE ~ edu + sex + age, data = dat2[dat2$age_group=="Old"])
+summary(lm.old.PE.edu)
+```
+
+```{r}
+lm2.old.TC <- lm(TC ~ edu+sex+age, data = dat2[dat2$age_group == "Old"])
+lm2.old.PR <- lm(PR ~ edu+sex+age, data = dat2[dat2$age_group == "Old"])
+lm2.old.PE <- lm(PE ~ edu+sex+age, data = dat2[dat2$age_group == "Old"])
+lm2.old.NPE <- lm(NPE ~ edu+sex+age, data = dat2[dat2$age_group == "Old"])
+lm2.old.CLR <- lm(CLR ~ edu+sex+age, data = dat2[dat2$age_group == "Old"])
+lm2.old.CAT <- lm(CAT ~ edu+sex+age, data = dat2[dat2$age_group == "Old"])
+lm2.old.FMS <- lm(FMS ~ edu+sex+age, data = dat2[dat2$age_group == "Old"])
+```
+
+```{r}
+summary(lm2.old.TC)
+```
+
+```{r}
+summary(lm2.old.PR)
+```
+
+```{r}
+summary(lm2.old.PE)
+```
+
+```{r}
+summary(lm2.old.CAT)
+```
+
+```{r}
+summary(lm2.old.TC)
+```
+
+```{r}
+summary(lm2.old.NPE)
+```
+
+```{r}
+summary(lm2.old.FMS)
+```
+
+```{r}
+summary(lm2.old.CLR)
+```
+
+
+
+```{r}
+old <- dat2[age_group=="Old"]
+old[, edu:=factor(edu)]
+setnames(old, "sex", "Gender")
+setnames(old, "edu", "Education")
+f1 <- ggplot(old, aes(age, CAT, color=Gender)) +
+  geom_point(aes(shape=Education), position = position_jitter()) +
+  geom_smooth(method="lm", formula="y~x") +
+  scale_y_continuous(breaks = c(0,1,2,3,4,5)) +
+  scale_x_continuous(breaks = c(55, 60, 65, 70, 75, 80)) +
+  coord_fixed(ratio = 5) +
+  labs(x="Age (Years)", y = "Category Completed (CAT)") +
+  theme_cowplot() +
+  panel_border() +
+  theme(legend.position = "right")
+print(f1)
+```
+
+```{r}
+save_plot("RegressionPlot.tiff", plot = f1)
+```
+
+
+
+
+
+```{r}
+summary(lm2.old.CLR)
+```
+
+```{r}
+summary(lm2.old.FMS)
+```
+
+```{r}
+summary(lm2.old.NPE)
+```
+
+```{r}
+lm2.young.TC <- lm(TC ~ edu+sex+age, data = dat2[dat2$age_group == "Young"])
+lm2.young.PR <- lm(PR ~ edu+sex+age, data = dat2[dat2$age_group == "Young"])
+lm2.young.PE <- lm(PE ~ edu+sex+age, data = dat2[dat2$age_group == "Young"])
+lm2.young.NPE <- lm(NPE ~ edu+sex+age, data = dat2[dat2$age_group == "Young"])
+lm2.young.CLR <- lm(CLR ~ edu+sex+age, data = dat2[dat2$age_group == "Young"])
+lm2.young.CAT <- lm(CAT ~ edu+sex+age, data = dat2[dat2$age_group == "Young"])
+lm2.young.FMS <- lm(FMS ~ edu+sex+age, data = dat2[dat2$age_group == "Young"])
+```
+
+```{r}
+summary(lm2.young.CAT)
+```
+
+```{r}
+summary(lm2.young.PE)
+```
+
+
+
+
+
+
+
+
+
+
