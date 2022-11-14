@@ -1,0 +1,119 @@
+---
+title: "R Notebook"
+output:
+  html_document:
+    df_print: paged
+---
+```{r}
+if (!("ggplot2" %in% installed.packages())){
+  .libPaths("~/R/lib")
+  install.packages("ggplot2")
+}
+if (!("gghighlight" %in% installed.packages())) install.packages("gghighlight")
+if (!("patchwork" %in% installed.packages())) install.packages("patchwork")
+if (!("paletteer" %in% installed.packages())) install.packages("paletteer")
+if (!("ggsci" %in% installed.packages())) install.packages("ggsci")
+
+library("ggplot2")
+library("dplyr")
+library("gghighlight")
+library("patchwork")
+library("paletteer")
+library("ggsci")
+
+library("tidyverse")
+```
+
+```{r}
+
+
+path_persistance <- file.path(getwd(),"persistance")
+
+path_persistance_correlation <- file.path(path_persistance,"correlation")
+path_persistance_statistics <- file.path(path_persistance,"statistics")
+path_persistance_pca <- file.path(path_persistance,"pca")
+
+
+# 分半信度数据
+multi_calc_frame_exp <- read.csv(file.path(path_persistance,file="multi_calc_frame_stefan_exp_64.csv"),row.names = 1)
+multi_calc_frame_health <- read.csv(file.path(path_persistance,file="multi_calc_frame_stefan_health_64.csv"),row.names = 1)
+```
+
+
+```{r}
+
+health_names <- c(
+  "Percent_Correct",
+  "Percent_pr",
+  "Percent_pr_e",
+  "Percent_npr_e",
+  "Percent_ConceptualLevelResponse",
+  "Percent_Category",
+  "Percent_FailureToMaintainSet")
+new_names <- c(
+  "TC",
+  "PR",
+  "PE",
+  "NPE",
+  "CLR",
+  "CAT",
+  "FMS")
+
+exp_group = c("exp","health")
+
+rownames(multi_calc_frame_exp)[match(health_names,rownames(multi_calc_frame_exp))] <- new_names
+rownames(multi_calc_frame_health)[match(health_names,rownames(multi_calc_frame_health))] <- new_names
+
+
+multi_calc_frame_exp <- multi_calc_frame_exp[new_names,]
+multi_calc_frame_health <- multi_calc_frame_health[new_names,]
+
+multi_calc_frame_exp <-  multi_calc_frame_exp %>% mutate(
+  rownames=rownames(multi_calc_frame_exp),
+  frame_type = 'exp')
+
+multi_calc_frame_health <-  multi_calc_frame_health %>% mutate(
+  rownames=rownames(multi_calc_frame_health),
+  frame_type = 'health')
+
+multi_calc_frame <-  rbind(multi_calc_frame_exp,multi_calc_frame_health)
+
+multi_calc_frame$frame_type <-  factor(multi_calc_frame$frame_type,levels=exp_group %>% rev())
+multi_calc_frame$rownames <-  factor(multi_calc_frame$rownames,levels=new_names %>% rev())
+
+multi_calc_frame %>% knitr::kable()
+```
+
+```{r}
+
+
+#forest plot https://rgraphs.com/forest-plot-in-r/
+#make plot
+p <- ggplot(multi_calc_frame, aes(x=monte_carlo_median, y=rownames, group=frame_type, color=frame_type, shape=rownames)) +
+  geom_errorbar(aes(xmin = monte_carlo_lower, xmax = monte_carlo_upper), width = 0.5,position = position_dodge(0.5)) +
+  geom_point(size = 2,position = position_dodge(0.5)) +
+  labs(x="Split-Half Reliability (Monte-Carlo)", y = "Index") +
+        scale_x_continuous(breaks=seq(0.2,1,0.1), limits = c(0.1,1)) +
+  # scale_color_manual(values = c("#6699ff", "#3B80B9")) +
+  scale_color_manual(values = c("#ff0000", "#0000ff")) +
+  scale_shape_manual(values= c(16,16,16,16,16,16,16,16,16,16,16,16,16))+
+  guides(
+    colour=guide_legend(title = "Group"),
+    shape=FALSE
+    )+
+  scale_color_discrete(breaks=exp_group)+
+  theme_classic() +
+  geom_vline(xintercept = 0.8, linetype = "longdash") +
+  theme(axis.line.y = element_blank(),
+        axis.ticks.y = element_blank())
+
+p
+
+
+```
+
+
+
+
+
+

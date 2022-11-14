@@ -12,6 +12,10 @@
 * CAT -Number of Categories Completed
 * FMS -Failure to Maintain Set
 
+**We provide two examples of the WCST index calculation and analyse process.**
+
+* enter the "example" directory to see the details.
+
 ## What's The Input Data's Format?
 
 We need a .csv file or a dataframe like this:
