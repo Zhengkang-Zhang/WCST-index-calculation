@@ -1,12 +1,5 @@
 # WCST index calculation on Stefan's dataset
 
-## Something you should know:
-
-* Dataset: the WCST dataset we used here comes from Stefan's opensource project ([stefanradev93/DBN](https://github.com/stefanradev93/DBN)). Specifically, the "FullDataset.npy"  and  "MatchingMat.npy" file. You should download it to the same directory if you want to execute these scripts on your own.
-
-* The prefix of each scripts indicates their order to run which mean step1 ~ step5.
-* At the end, we graphed a split-half estimates example, Monte Carlo split-half estimates, of the WCST indices. Check "S5_graph_split_half_stefan.html" to see the graph.
-
 
 
 ## What's these scripts' function?
@@ -17,7 +10,16 @@
 
 
 
-## How to use these scripts?
+## Something to know.
+
+* Dataset: the WCST dataset we used here comes from Stefan's opensource project ([stefanradev93/DBN](https://github.com/stefanradev93/DBN)). Specifically, the "FullDataset.npy"  and  "MatchingMat.npy" file. You should download it to the same directory if you want to execute these scripts on your own.
+
+* The prefix of each scripts indicates their order to run which mean step1 ~ step5.
+* At the end, we graphed a split-half estimates example, Monte Carlo split-half estimates, of the WCST indices. Check "S5_graph_split_half_stefan.html" to see the graph.
+
+
+
+## Details for these scripts?
 
 
 
