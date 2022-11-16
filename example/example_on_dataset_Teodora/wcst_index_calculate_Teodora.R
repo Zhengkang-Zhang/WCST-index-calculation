@@ -82,7 +82,7 @@ makesure_type <- function(data,indices,is_type,as_type){
 
 
 
-filename <- "test_wcst_long.csv"
+filename <- "wcst_long_Teodora.csv"
 wcst_long <- read.table(filename,fileEncoding="GBK", sep=",", header=TRUE)
 wcst_short <- wcst_long[,c("subid")] %>% unique()
 
@@ -124,7 +124,7 @@ cal_rule_and_correct <- function(data){
   for(i in c(1:nrow(data))){
     data$correct[i] <- if(data$correct_card[i]==data$button_pressed[i]) TRUE else FALSE
   }
-
+  
   return(data)
   
 }
@@ -340,7 +340,7 @@ calc_PR <- function(data){
   
   
   return(data)
-
+  
 }
 
 ### Add new columns
@@ -847,10 +847,10 @@ multi_cal_params <- list(
 )
 
 
-# # deannotate to enable the split-half calculation, you need to know that this may cost most of the CPU source and may cost much time to complete.
-# multi_calc_frame <- multi_summary(data=wcst_long,framed_params=multi_cal_params)
-# 
-# # save to file, check to see what has been saved.
-# write.csv(multi_calc_frame %>% round(4),file.path(path_persistance,file="multi_calc_frame.csv"))
+# deannotate to enable the split-half calculation, you need to know that this may cost most of the CPU source and may cost much time to complete.
+multi_calc_frame <- multi_summary(data=wcst_long,framed_params=multi_cal_params)
+
+# save to file, check to see what has been saved.
+write.csv(multi_calc_frame %>% round(4),file.path(path_persistance,file="multi_calc_frame.csv"))
 
 
